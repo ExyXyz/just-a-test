@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ekushi's Minecraft Server Status</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1e1e2f;
+            color: #fff;
+        }
+
+        .server-panel {
+            background: #2a2a40;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+        }
+
+        .server-panel h1 {
+            color: #00bcd4;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .server-panel h1 img {
+            width: 40px;
+            margin-right: 10px;
+        }
+
+        .server-info {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .server-info p {
+            margin: 15px 0;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .server-info strong {
+            color: #00bcd4;
+            margin-right: 10px;
+        }
+
+        .server-info img {
+            width: 24px;
+            margin-right: 10px;
+        }
+
+        .server-icon {
+            margin-bottom: 20px;
+        }
+
+        .server-icon img {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+            border: 3px solid #00bcd4;
+        }
+
+        .players-list {
+            margin-top: 20px;
+        }
+
+        .players-list h3 {
+            color: #00bcd4;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .players-list h3 img {
+            width: 24px;
+            margin-right: 10px;
+        }
+
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .players-grid img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #00bcd4;
+        }
+
+        .refresh-notice {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        .status-indicator.online {
+            background: #4caf50;
+        }
+
+        .status-indicator.offline {
+            background: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="server-panel">
+        <h1>
+            <img src="https://www.freeiconspng.com/thumbs/minecraft-png-icon/minecraft-icon-0.png" alt="Minecraft Logo">
+            Server Status
+        </h1>
+        <div class="server-icon">
+            <img id="server-icon" src="" alt="Server Icon">
+        </div>
+        <div class="server-info">
+            <p>
+                <img src="https://cdn-icons-png.flaticon.com/512/1828/1828640.png" alt="Status Icon">
+                <strong>Status:</strong> <span id="server-status">Loading...</span>
+                <span id="status-indicator" class="status-indicator"></span>
+            </p>
+            <p>
+                <img src="https://cdn-icons-png.flaticon.com/512/484/484613.png" alt="IP Icon">
+                <strong>IP:</strong> MC.EKUSHI.XYZ
+            </p>
+            <p>
+                <img src="https://cdn-icons-png.flaticon.com/512/3176/3176292.png" alt="Port Icon">
+                <strong>Port:</strong> <span id="server-port">Loading...</span> /4025
+            </p>
+            <p>
+                <img src="https://cdn-icons-png.flaticon.com/512/3094/3094997.png" alt="Version Icon">
+                <strong>Version:</strong> <span id="server-version">Loading...</span> /1.21.60
+            </p>
+            <p>
+                <img src="https://cdn-icons-png.flaticon.com/512/3039/3039379.png" alt="Players Icon">
+                <strong>Players:</strong> <span id="server-players">Loading...</span>
+            </p>
+            <p>
+                <img src="https://cdn-icons-png.flaticon.com/512/1828/1828643.png" alt="MOTD Icon">
+                <strong>MOTD:</strong> <span id="server-motd">Loading...</span>
+            </p>
+        </div>
+        <div class="players-list">
+            <h3>
+                <img src="https://cdn-icons-png.flaticon.com/512/3039/3039379.png" alt="Players Icon">
+                Online Players
+            </h3>
+            <div class="players-grid" id="players-grid"></div>
+        </div>
+        <div class="refresh-notice">IF IT'S WORK DON'T TOUCH IT</div>
+    </div>
+
+    <script>
+        const SERVER_ADDRESS = "mc.ekushi.xyz:30268"; 
+        const PLAYER_ICON = "https://i.pinimg.com/1200x/85/78/bf/8578bfd439ef6ee41e103ae82b561986.jpg"; 
+
+        async function fetchServerData() {
+            try {
+                const response = await fetch(`https://api.mcsrvstat.us/3/${SERVER_ADDRESS}`);
+                const data = await response.json();
+
+                const statusIndicator = document.getElementById("status-indicator");
+                if (data.online) {
+                    document.getElementById("server-status").textContent = "Online";
+                    statusIndicator.className = "status-indicator online";
+                } else {
+                    document.getElementById("server-status").textContent = "Offline";
+                    statusIndicator.className = "status-indicator offline";
+                }
+
+                document.getElementById("server-port").textContent = data.port || "N/A";
+                document.getElementById("server-version").textContent = data.version || "N/A";
+                document.getElementById("server-players").textContent = `${data.players?.online || 0}/${data.players?.max || 0}`;
+                document.getElementById("server-motd").innerHTML = data.motd?.html?.join("<br>") || "N/A";
+
+                const serverIcon = document.getElementById("server-icon");
+                if (data.icon) {
+                    serverIcon.src = data.icon;
+                    serverIcon.style.display = "block";
+                } else {
+                    serverIcon.style.display = "none";
+                }
+
+                const playersGrid = document.getElementById("players-grid");
+                playersGrid.innerHTML = "";
+                if (data.players?.online > 0) {
+                    for (let i = 0; i < data.players.online; i++) {
+                        const img = document.createElement("img");
+                        img.src = PLAYER_ICON;
+                        img.alt = "Player Head";
+                        playersGrid.appendChild(img);
+                    }
+                } else {
+                    playersGrid.textContent = "";
+                }
+            } catch (error) {
+                console.error("Error fetching server data:", error);
+                document.getElementById("server-status").textContent = "Error fetching data.";
+            }
+        }
+
+        fetchServerData();
+        setInterval(fetchServerData, 5000);
+    </script>
+</body>
+</html>
